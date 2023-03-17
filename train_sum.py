@@ -10,7 +10,7 @@ class RunCmd(object):
         subprocess.call(self.cmd, shell=True)
 
 
-# Train the model ten times and model predicts the result ten times on the test set
+# Train the model three times and model predicts the result ten times on the test set
 
 for b in range(1,25):
     if b == 1:
