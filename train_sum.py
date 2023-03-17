@@ -12,7 +12,7 @@ class RunCmd(object):
 
 # Train the model ten times and model predicts the result ten times on the test set
 
-for b in range(1,2):
+for b in range(1,25):
     if b == 1:
         print(b)
         all = glob.glob("./model*")
@@ -20,7 +20,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
                --posi=./GraphProt_CLIP_sequences/ALKBH5_Baltz2012.train.positives.fa \
@@ -41,7 +41,7 @@ for b in range(1,2):
             os.remove(h)
 
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/C17ORF85_Baltz2012.train.positives.fa \
@@ -63,7 +63,7 @@ for b in range(1,2):
             os.remove(h)
 
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
                     --posi=./GraphProt_CLIP_sequences/C22ORF28_Baltz2012.train.positives.fa \
@@ -84,7 +84,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
                     --posi=./GraphProt_CLIP_sequences/CAPRIN1_Baltz2012.train.positives.fa \
@@ -105,7 +105,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/CLIPSEQ_AGO2.train.positives.fa \
@@ -124,7 +124,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
                --posi=./GraphProt_CLIP_sequences/CLIPSEQ_ELAVL1.train.positives.fa \
@@ -143,7 +143,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/CLIPSEQ_SFRS1.train.positives.fa \
@@ -163,7 +163,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/ICLIP_HNRNPC.train.positives.fa \
@@ -183,7 +183,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/ICLIP_TDP43.train.positives.fa \
@@ -202,7 +202,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/ICLIP_TIA1.train.positives.fa \
@@ -221,7 +221,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/ICLIP_TIAL1.train.positives.fa \
@@ -240,7 +240,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_AGO1234.train.positives.fa \
@@ -259,7 +259,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_ELAVL1.train.positives.fa \
@@ -278,7 +278,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_ELAVL1A.train.positives.fa \
@@ -297,7 +297,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_EWSR1.train.positives.fa \
@@ -316,7 +316,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_FUS.train.positives.fa \
@@ -335,7 +335,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
                --posi=./GraphProt_CLIP_sequences/PARCLIP_HUR.train.positives.fa \
@@ -355,7 +355,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_IGF2BP123.train.positives.fa \
@@ -374,7 +374,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_MOV10_Sievers.train.positives.fa \
@@ -393,7 +393,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_PUM2.train.positives.fa \
@@ -412,7 +412,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_QKI.train.positives.fa \
@@ -432,7 +432,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PARCLIP_TAF15.train.positives.fa \
@@ -452,7 +452,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/PTBv1.train.positives.fa \
@@ -473,7 +473,7 @@ for b in range(1,2):
             print(h)
             os.remove(h)
         for i in range(1,4):
-            print('训练：',i)
+            print('train：',i)
             a = RunCmd()
             a.cmd_run('python MARSNet.py \
             --posi=./GraphProt_CLIP_sequences/ZC3H7B_Baltz2012.train.positives.fa \
