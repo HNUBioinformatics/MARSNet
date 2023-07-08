@@ -1,23 +1,31 @@
-# MARSNet:基于卷积注意力机制的多重残差收缩网络预测RNA-蛋白质结合位点
+# MARSNet: Multiple efficient convolutional attention residual shrinkage networks to predict RBPs’ binding sites in RNA sequences
 
 ****
-**环境**
+**Introduction**
+  In this study, a novel multi-efficient convolutional attention residual contraction network model, MARSNet, was constructed, in which the residual contraction network uses soft thresholding to remove noise data in RNA sequences and identify RBPs binding sites with high accuracy. MARSNet combines efficient channel attention (ECA) and convolutional block attention mechanism (CBAM). The combination of efficient channel attention (ECA) and convolutional block attention mechanism (CBAM) can automatically identify key information in RNA sequences.
+****
+
+****
+**Requirements**
 * pytorch 1.8.1
 * python  3.8.5
 ****
-**数据**
+**datasets**
 
-下载并解压训练和测试数据:http://www.bioinf.uni-freiburg.de/Software/GraphProt/GraphProt_CLIP_sequences.tar.bz2
+Download and unzip training and test data:http://www.bioinf.uni-freiburg.de/Software/GraphProt/GraphProt_CLIP_sequences.tar.bz2
 ****
-**训练方法**
+**trian**
 ```
-python train_sum.py 
+python train.py 
 ```
-
+**test**
+```
+python test.py 
+```
 ****           
-**注意**
+**Notice**
 
-如果MARSNet在你的数据集中无法收敛,可以将Adam替换成SGD或者RMSprop.
+If MARSNet does not converge in your datasets, you can replace Adam with SGD or RMSprop.
 
 
 
