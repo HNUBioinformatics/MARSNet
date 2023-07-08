@@ -616,7 +616,6 @@ def Indicators(y, y_pre):
     f1 = float(2 * pre * recall / (pre + recall))
     # demember = ((TP+FP) * (TP+FN) * (TN+FP) * (TN+FN)) ** 0.5
     # mcc = member / demember
-    print(mcc, acc, recall, pre, f1)
     return mcc, acc, recall, pre, f1
     
 # MARSNet main function
@@ -873,7 +872,7 @@ def RUN_MARSNet(parser):
         p = np.around(p, 0).astype(int)
         mcc, accuracy, recall, precision, f1 = Indicators(X_labels, p)
         ap = average_precision_score(X_labels, p)
-        print(accuracy, precision, recall, mcc, f1, ap)
+        print('accuracy:' accuracy, 'precision:' precision, 'recall': recall, 'mcc:' mcc, 'f1:' f1, 'ap:' ap)
 
         auc = roc_auc_score(X_labels, predict_sum)
         print('AUC:{:.3f}'.format(auc))
