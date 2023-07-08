@@ -26,7 +26,7 @@ from collections import OrderedDict
 from einops import rearrange
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.metrics import roc_curve, auc, roc_auc_score
+from sklearn.metrics import roc_curve, auc, roc_auc_score,average_precision_score
 import random
 import gzip
 import pickle
@@ -349,6 +349,29 @@ class Shrinkage(nn.Module):
         return x
 
 
+class ECAlayer(nn.Module):
+    def __init__(self, channel, gamma=2, bias=1):
+        super(ECAlayer, self).__init__()
+        # x: input features with shape [b, c, h, w]
+        self.channel = channel
+        self.gamma = gamma
+        self.bias = bias
+
+        k_size = int(
+            abs((math.log(self.channel, 2) + self.bias) / self.gamma))  
+        k_size = k_size if k_size % 2 else k_size + 1  
+
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.conv = nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        y = self.avg_pool(x) 
+        # b,c,1,1
+        y = self.conv(y.squeeze(-1).transpose(-1, -2))    
+        y = y.transpose(-1, -2).unsqueeze(-1)
+        y = self.sigmoid(y)
+        return x * y.expand_as(x)
 
 class ChannelAttention(nn.Module):
     def __init__(self, in_planes, ratio=16):
@@ -398,9 +421,6 @@ class cbamblock(nn.Module):
         return x
 
 
-
-
-
 class DRSN(nn.Module):
     def __init__(self, nb_filter, channel=7, num_classes=2, kernel_size=(4, 10), pool_size=(1, 3), labcounts=32,
                  window_size=12, hidden_size=256, stride=(1, 1), padding=0):
@@ -422,6 +442,7 @@ class DRSN(nn.Module):
         out2_size = int((maxpool_size + 2 * padding - (kernel_size[1] - 1) - 1) / stride[1] + 1)
         maxpool2_size = int((out2_size + 2 * padding - (pool_size[1] - 1) - 1) / stride[1] + 1)
         self.reslayer2 =self._make_layer(RSBU_CW, 32, 1, 1)
+        self.reslayer20 = ECAlayer(32)
         self.reslayer21 = cbamblock(32)
 
 
@@ -452,6 +473,7 @@ class DRSN(nn.Module):
         out = self.reslayer1(out)
         out = self.layer2(out)
         out = self.reslayer2(out)
+        out = self.reslayer20(out)
         out = self.reslayer21(out)
         out = out.view(out.size(0), -1)
         out = self.drop1(out)
@@ -567,7 +589,36 @@ def predict_network(model_type, X_test, channel=7, window_size=107, model_file='
             pred = np.concatenate((pred, pred_test1), axis=0)
     return pred
 
-
+def Indicators(y, y_pre):
+    '''
+    :param y: array，True value
+    :param y_pre: array，Predicted value
+    :return: float
+    '''
+    lenall = len(y)
+    TP, FP, FN, TN = 0, 0, 0, 0
+    for i in range(lenall):
+        if y_pre[i] == 1:
+            if y[i] == 1:
+                TP += 1
+            if y[i] == 0:
+                FP += 1
+        if y_pre[i] == 0:
+            if y[i] == 1:
+                FN += 1
+            if y[i] == 0:
+                TN += 1
+    member = TP * TN - FP * FN
+    mcc = float(TP * TN - FP * FN) / (np.sqrt((TP + FP) * (TP + FN) * (TN + FN) * (TN + FP)))
+    acc = float((TP + TN) / (TP + TN + FP + FN))
+    recall = float(TP / (TP + FN))
+    pre = float(TP / (TP + FP))
+    f1 = float(2 * pre * recall / (pre + recall))
+    # demember = ((TP+FP) * (TP+FN) * (TN+FP) * (TN+FN)) ** 0.5
+    # mcc = member / demember
+    print(mcc, acc, recall, pre, f1)
+    return mcc, acc, recall, pre, f1
+    
 # MARSNet main function
 def RUN_MARSNet(parser):
     # data_dir = './GraphProt_CLIP_sequences/'
@@ -627,13 +678,6 @@ def RUN_MARSNet(parser):
                               model_file=model_file + '.4011', batch_size=batch_size, n_epochs=n_epochs,
                               num_filters=num_filters)
 
-
-        print("5011")
-        train_bags, train_labels = [], []
-        train_bags, train_labels = get_data(posi, nega, channel=1, window_size=501)
-        model = train_network(model_type, np.array(train_bags), np.array(train_labels), channel=1, window_size=501 + 6,
-                              model_file=model_file + '.5011', batch_size=batch_size, n_epochs=n_epochs,
-                              num_filters=num_filters)
         print("1012")
         train_bags, train_labels = [], []
         train_bags, train_labels = get_data(posi, nega, channel=7, window_size=101)
@@ -665,13 +709,6 @@ def RUN_MARSNet(parser):
                               model_file=model_file + '.4012', batch_size=batch_size, n_epochs=n_epochs,
                               num_filters=num_filters)
 
-
-        print("5012")
-        train_bags, train_labels = [], []
-        train_bags, train_labels = get_data(posi, nega, channel=1, window_size=501)
-        model = train_network(model_type, np.array(train_bags), np.array(train_labels), channel=1, window_size=501 + 6,
-                              model_file=model_file + '.5012', batch_size=batch_size, n_epochs=n_epochs,
-                              num_filters=num_filters)
         
         print("1013")
         train_bags, train_labels = [], []
@@ -705,12 +742,6 @@ def RUN_MARSNet(parser):
                               num_filters=num_filters)
 
 
-        print("5013")
-        train_bags, train_labels = [], []
-        train_bags, train_labels = get_data(posi, nega, channel=1, window_size=501)
-        model = train_network(model_type, np.array(train_bags), np.array(train_labels), channel=1, window_size=501 + 6,
-                              model_file=model_file + '.5013', batch_size=batch_size, n_epochs=n_epochs,
-                              num_filters=num_filters)
         print("1014")
         train_bags, train_labels = [], []
         train_bags, train_labels = get_data(posi, nega, channel=7, window_size=101)
@@ -741,16 +772,6 @@ def RUN_MARSNet(parser):
         model = train_network(model_type, np.array(train_bags), np.array(train_labels), channel=1, window_size=401 + 6,
                               model_file=model_file + '.4014', batch_size=batch_size, n_epochs=n_epochs,
                               num_filters=num_filters)
-
-
-        print("5014")
-        train_bags, train_labels = [], []
-        train_bags, train_labels = get_data(posi, nega, channel=1, window_size=501)
-        model = train_network(model_type, np.array(train_bags), np.array(train_labels), channel=1, window_size=501 + 6,
-                              model_file=model_file + '.5014', batch_size=batch_size, n_epochs=n_epochs,
-                              num_filters=num_filters)
-
-        
         
         end_time = timeit.default_timer()
         file_out.write(str(round(float(end_time - start_time), 3)) + '\n')
@@ -761,123 +782,98 @@ def RUN_MARSNet(parser):
         file_out = open('pre_auc.txt', 'a')
         file_out2 = open('time_test.txt', 'a')
 
-        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=501)
-        predict1 = predict_network(model_type, np.array(X_test), channel=1, window_size=501 + 6,
-                                   model_file=model_file + '.5014', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=7, window_size=101)
-        predict2 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
-                                   model_file=model_file + '.1011', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
+        predict11 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
+                                    model_file=model_file + '.1011', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=3, window_size=201)
-        predict3 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
-                                   model_file=model_file + '.2011', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-
+        predict12 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
+                                    model_file=model_file + '.1012', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=2, window_size=301)
-        predict4 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
-                                   model_file=model_file + '.3011', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-
-        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=401)
-        predict5 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
-                                   model_file=model_file + '.4011', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=501)
-        predict6 = predict_network(model_type, np.array(X_test), channel=1, window_size=501 + 6,
-                                   model_file=model_file + '.5011', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-        
-        X_test, X_labels = get_data(testfile, nega, channel=7, window_size=101)
-        predict7 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
-                                   model_file=model_file + '.1012', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-        X_test, X_labels = get_data(testfile, nega, channel=3, window_size=201)
-        predict8 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
-                                   model_file=model_file + '.2012', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-
-
-        X_test, X_labels = get_data(testfile, nega, channel=2, window_size=301)
-        predict9= predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
-                                   model_file=model_file + '.3012', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
+        predict13 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
+                                    model_file=model_file + '.1013', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=1, window_size=401)
-        predict10 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
-                                   model_file=model_file + '.4012', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=501)
-        predict11 = predict_network(model_type, np.array(X_test), channel=1, window_size=501 + 6,
-                                   model_file=model_file + '.5012', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
+        predict14 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
+                                    model_file=model_file + '.1014', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=7, window_size=101)
-        predict12 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
-                                   model_file=model_file + '.1013', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
+        predict21 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
+                                    model_file=model_file + '.2011', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=3, window_size=201)
-        predict13 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
-                                   model_file=model_file + '.2013', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-
+        predict22 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
+                                    model_file=model_file + '.2012', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=2, window_size=301)
-        predict14 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
-                                   model_file=model_file + '.3013', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
+        predict23 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
+                                    model_file=model_file + '.2013', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=1, window_size=401)
-        predict15 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
-                                   model_file=model_file + '.4013', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
+        predict24 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
+                                    model_file=model_file + '.2014', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
-        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=501)
-        predict16 = predict_network(model_type, np.array(X_test), channel=1, window_size=501 + 6,
-                                   model_file=model_file + '.5013', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-        
         X_test, X_labels = get_data(testfile, nega, channel=7, window_size=101)
-        predict17 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
-                                   model_file=model_file + '.1014', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
+        predict31 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
+                                    model_file=model_file + '.3011', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=3, window_size=201)
-        predict18 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
-                                   model_file=model_file + '.2014', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
-
+        predict32 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
+                                    model_file=model_file + '.3012', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=2, window_size=301)
-        predict19= predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
-                                   model_file=model_file + '.3014', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-
+        predict33 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
+                                    model_file=model_file + '.3013', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
         X_test, X_labels = get_data(testfile, nega, channel=1, window_size=401)
-        predict20 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
-                                   model_file=model_file + '.4014', batch_size=batch_size, n_epochs=n_epochs,
-                                   num_filters=num_filters)
-        
-        
-          
+        predict34 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
+                                    model_file=model_file + '.3014', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
-        predict_sum = (predict1 +predict2+ predict3 + predict4 + predict5 + predict6 + predict7 + predict8 + predict9+ predict10 + predict11 + predict12 + predict13 + predict14 + predict15+ predict16 + predict17 + predict18+ predict19 + predict20          )/20.0
+        X_test, X_labels = get_data(testfile, nega, channel=7, window_size=101)
+        predict41 = predict_network(model_type, np.array(X_test), channel=7, window_size=101 + 6,
+                                    model_file=model_file + '.4011', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
 
+        X_test, X_labels = get_data(testfile, nega, channel=3, window_size=201)
+        predict42 = predict_network(model_type, np.array(X_test), channel=3, window_size=201 + 6,
+                                    model_file=model_file + '.4012', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
+
+        X_test, X_labels = get_data(testfile, nega, channel=2, window_size=301)
+        predict43 = predict_network(model_type, np.array(X_test), channel=2, window_size=301 + 6,
+                                    model_file=model_file + '.4013', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
+
+        X_test, X_labels = get_data(testfile, nega, channel=1, window_size=401)
+        predict44 = predict_network(model_type, np.array(X_test), channel=1, window_size=401 + 6,
+                                    model_file=model_file + '.4014', batch_size=batch_size, n_epochs=n_epochs,
+                                    num_filters=num_filters)
+        preA = (1 * predict11 + 2 * predict12 + 4 * predict13 + 3 * predict14) / 10.0
+        preB = (1 * predict21 + 2 * predict22 + 4 * predict23 + 3 * predict24) / 10.0
+        preC = (1 * predict31 + 2 * predict32 + 4 * predict33 + 3 * predict34) / 10.0
+        preD = (1 * predict41 + 2 * predict42 + 4 * predict43 + 3 * predict44) / 10.0
+        
+
+        predict_sum =  (preA + preB + preC + preD) / 4.0
+        p = predict_sum
+        p = np.around(p, 0).astype(int)
+        mcc, accuracy, recall, precision, f1 = Indicators(X_labels, p)
+        ap = average_precision_score(X_labels, p)
+        print(accuracy, precision, recall, mcc, f1, ap)
 
         auc = roc_auc_score(X_labels, predict_sum)
         print('AUC:{:.3f}'.format(auc))
@@ -916,7 +912,7 @@ def parse_arguments(parser):
                         help='The number of filters for DRSN (default value: 16)')
     parser.add_argument('--n_epochs', type=int, default=50, help='The number of training epochs (default value: 50)')
 
-    args = parser.parse_args()  # 解析添加的参数
+    args = parser.parse_args()  
     return args
 
 
