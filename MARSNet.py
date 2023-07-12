@@ -872,7 +872,7 @@ def RUN_MARSNet(parser):
         p = np.around(p, 0).astype(int)
         mcc, accuracy, recall, precision, f1 = Indicators(X_labels, p)
         ap = average_precision_score(X_labels, p)
-        print('accuracy:' accuracy, 'precision:' precision, 'recall:' recall, 'mcc:' mcc, 'f1:' f1, 'ap:' ap)
+        print('accuracy:', accuracy, 'precision:', precision, 'recall:' ,recall, 'mcc:', mcc, 'f1:' ,f1, 'ap:', ap)
 
         auc = roc_auc_score(X_labels, predict_sum)
         print('AUC:{:.3f}'.format(auc))
