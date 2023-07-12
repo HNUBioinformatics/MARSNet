@@ -888,7 +888,7 @@ def RUN_MARSNet(parser):
         print('please specify that you want to train the mdoel or predict for your own sequences')
 
 
-# MCNN framework optional parameters
+# optional parameters
 def parse_arguments(parser):
     parser.add_argument('--posi', type=str, metavar='<postive_sequecne_file>',
                         help='The fasta file of positive training samples')
