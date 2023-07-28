@@ -11,7 +11,7 @@ class RunCmd(object):
 
 
 # Train the model
-for i in range(3):
+for i in range(2):
         print('train：',i)
         a = RunCmd()
         a.cmd_run('python MARSNet.py \
