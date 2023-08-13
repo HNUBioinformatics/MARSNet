@@ -16,11 +16,11 @@ Download and unzip training and test data:http://www.bioinf.uni-freiburg.de/Soft
 ****
 **trian**
 ```
-python train.py 
+python mian.py 
 ```
-**test**
+**detect motif**
 ```
-python test.py 
+python Detect_motif.py 
 ```
 ****           
 **Notice**
