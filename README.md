@@ -2,6 +2,7 @@
 
 ****
 **Introduction**
+
   In this study, a novel multi-efficient convolutional attention residual contraction network model, MARSNet, was constructed, in which the residual contraction network uses soft thresholding to remove noise data in RNA sequences and identify RBPs binding sites with high accuracy. MARSNet combines efficient channel attention (ECA) and convolutional block attention mechanism (CBAM). The combination of efficient channel attention (ECA) and convolutional block attention mechanism (CBAM) can automatically identify key information in RNA sequences.
 ****
 
