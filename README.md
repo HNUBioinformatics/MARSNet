@@ -17,7 +17,7 @@ Download and unzip training and test data:http://www.bioinf.uni-freiburg.de/Soft
 ****
 **trian**
 ```
-python mian.py 
+python main.py 
 ```
 **detect motif**
 ```
